@@ -10,12 +10,15 @@ const SUPABASE_CONFIG = {
     upiId: '9972312878@ybl' // UPI ID for checkout
 };
 
-// Initialize Supabase client
-// We use window.supabaseClient to avoid 'Identifier has already been declared' errors
-// when multiple scripts try to declare a 'supabase' variable.
-if (typeof window.supabase !== 'undefined') {
-    window.supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-    console.log('Supabase client initialized');
-} else {
-    console.error('Supabase library not loaded! Check your HTML script tags.');
+// Initialize Supabase client immediately
+// Pass it to window so other scripts can use it
+try {
+    if (window.supabase) {
+        window.supabaseClient = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        console.log('Supabase client initialized successfully');
+    } else {
+        console.error('Supabase library not found. Ensure the CDN script is loaded before config.js');
+    }
+} catch (error) {
+    console.error('Error initializing Supabase:', error);
 }

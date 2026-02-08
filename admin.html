@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - krrrZen</title>
+    <link rel="icon" type="image/x-icon" href="public/logo.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,7 +38,7 @@
     <div id="admin-dashboard" class="hidden">
         <!-- Header -->
         <header class="bg-ivory shadow-md">
-            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-4">
                 <span class="font-great-vibes text-3xl text-coral-red">krrrZen Admin</span>
                 <div class="flex items-center space-x-4">
                     <span id="admin-name" class="text-deep-charcoal"></span>
@@ -48,21 +49,22 @@
 
         <!-- Navigation Tabs -->
         <div class="bg-white border-b border-soft-pink">
-            <div class="container mx-auto px-4">
-                <nav class="flex space-x-8">
+            <div class="container mx-auto px-4 overflow-x-auto">
+                <nav class="flex space-x-8 min-w-max">
                     <button class="tab-btn py-4 px-2 border-b-2 border-coral-red text-coral-red font-quicksand" data-tab="products">Products</button>
                     <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-deep-charcoal hover:text-coral-red font-quicksand" data-tab="orders">
                         Orders <span id="pending-orders-badge" class="hidden ml-2 bg-coral-red text-white text-xs px-2 py-1 rounded-full"></span>
                     </button>
+                    <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-deep-charcoal hover:text-coral-red font-quicksand" data-tab="subscribers">Subscribers</button>
                 </nav>
             </div>
         </div>
 
         <!-- Products Tab -->
         <div id="products-tab" class="tab-content container mx-auto px-4 py-8">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h2 class="font-playfair text-3xl text-deep-charcoal">Manage Products</h2>
-                <button id="add-product-btn" class="bg-coral-red text-white font-quicksand font-bold py-3 px-6 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">
+                <button id="add-product-btn" class="bg-coral-red text-white font-quicksand font-bold py-3 px-6 rounded-full shadow-lg hover:bg-opacity-90 transition-colors w-full md:w-auto">
                     <span class="material-icons align-middle">add</span> Add Product
                 </button>
             </div>
@@ -74,6 +76,29 @@
             <h2 class="font-playfair text-3xl text-deep-charcoal mb-6">Manage Orders</h2>
             <div class="bg-white rounded-lg shadow-md overflow-hidden">
                 <div id="orders-list"></div>
+            </div>
+        </div>
+
+        <!-- Subscribers Tab -->
+        <div id="subscribers-tab" class="tab-content container mx-auto px-4 py-8 hidden">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <h2 class="font-playfair text-3xl text-deep-charcoal">Newsletter Subscribers</h2>
+                <button onclick="copyAllEmails()" class="text-coral-red hover:underline font-quicksand font-bold">
+                    Copy All Emails
+                </button>
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden overflow-x-auto">
+                <table class="w-full text-left border-collapse min-w-[600px]">
+                    <thead class="bg-soft-pink">
+                        <tr>
+                            <th class="py-4 px-6 font-quicksand font-bold text-deep-charcoal border-b border-gray-200">Email</th>
+                            <th class="py-4 px-6 font-quicksand font-bold text-deep-charcoal border-b border-gray-200">Subscribed At</th>
+                        </tr>
+                    </thead>
+                    <tbody id="subscribers-list" class="text-gray-700">
+                        <!-- Subscribers will be loaded here via JS -->
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -109,9 +134,20 @@
                     <input class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" type="number" id="product-stock" required>
                 </div>
                 <div class="mb-6">
-                    <label class="block text-deep-charcoal mb-2" for="product-image">Image URL *</label>
-                    <input class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" type="url" id="product-image" required>
-                    <p class="text-sm text-gray-600 mt-1">Enter the full URL of the product image</p>
+                    <label class="block text-deep-charcoal mb-2">Product Image *</label>
+                    <div class="flex flex-col gap-2">
+                        <div class="flex items-center gap-2">
+                            <input type="file" id="product-image-file" accept="image/*" class="w-full text-sm text-deep-charcoal file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-soft-pink file:text-deep-charcoal hover:file:bg-coral-red hover:file:text-white transition-colors cursor-pointer">
+                        </div>
+                        <input type="hidden" id="product-image" required>
+                        <div id="image-preview-container" class="hidden mt-2 relative w-fit">
+                            <img id="image-preview" src="" alt="Preview" class="h-40 object-cover rounded-lg border-2 border-soft-pink shadow-sm">
+                            <button type="button" id="remove-image-btn" class="absolute -top-2 -right-2 bg-coral-red text-white rounded-full p-1 shadow-md hover:bg-opacity-90">
+                                <span class="material-icons text-sm">close</span>
+                            </button>
+                        </div>
+                        <p id="upload-status" class="text-sm text-gray-500 hidden"></p>
+                    </div>
                 </div>
                 <div class="flex space-x-4">
                     <button type="submit" class="flex-1 bg-coral-red text-white font-quicksand font-bold py-3 px-6 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">Save Product</button>
@@ -135,6 +171,6 @@
     </div>
 
     <script src="config.js"></script>
-    <script src="admin.js"></script>
+    <script src="admin.js?v=2"></script>
 </body>
 </html>

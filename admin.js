@@ -3,7 +3,8 @@
 let currentAdmin = null;
 
 // Initialize Supabase from config.js
-const supabase = window.supabaseClient;
+// Renamed to 'db' to avoid conflict with global 'supabase' variable
+const db = window.supabaseClient;
 
 // Check if admin is logged in
 document.addEventListener('DOMContentLoaded', function() {
@@ -42,6 +43,10 @@ function setupEventListeners() {
     
     // Close order modal
     document.getElementById('close-order-modal')?.addEventListener('click', closeOrderModal);
+
+    // Image Upload Handling
+    document.getElementById('product-image-file')?.addEventListener('change', handleImageSelect);
+    document.getElementById('remove-image-btn')?.addEventListener('click', removeImage);
 }
 
 async function handleLogin(e) {
@@ -54,7 +59,7 @@ async function handleLogin(e) {
     try {
         // For demo purposes, using simple authentication
         // In production, use proper password hashing and Supabase Auth
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('admin_users')
             .select('*')
             .eq('email', email)
@@ -75,7 +80,7 @@ async function handleLogin(e) {
         localStorage.setItem('krrrzen_admin', JSON.stringify(currentAdmin));
         
         // Update last login
-        await supabase
+        await db
             .from('admin_users')
             .update({ last_login: new Date().toISOString() })
             .eq('id', data.id);
@@ -103,8 +108,58 @@ function showDashboard() {
     
     loadProducts();
     loadOrders();
+    loadSubscribers();
     startOrderPolling();
 }
+
+// ... existing code ...
+
+// Subscribers Management
+async function loadSubscribers() {
+    try {
+        const { data, error } = await db
+            .from('subscribers')
+            .select('*')
+            .order('subscribed_at', { ascending: false });
+            
+        if (error) throw error;
+        
+        displaySubscribers(data);
+    } catch (error) {
+        console.error('Error loading subscribers:', error);
+    }
+}
+
+function displaySubscribers(subscribers) {
+    const list = document.getElementById('subscribers-list');
+    
+    if (!subscribers || subscribers.length === 0) {
+        list.innerHTML = '<tr><td colspan="2" class="py-4 px-6 text-center text-gray-500">No subscribers yet.</td></tr>';
+        return;
+    }
+    
+    list.innerHTML = subscribers.map(sub => `
+        <tr class="hover:bg-gray-50 border-b border-gray-100">
+            <td class="py-3 px-6"><a href="mailto:${sub.email}" class="text-coral-red hover:underline">${sub.email}</a></td>
+            <td class="py-3 px-6 text-sm text-gray-600">${new Date(sub.subscribed_at).toLocaleDateString()} ${new Date(sub.subscribed_at).toLocaleTimeString()}</td>
+        </tr>
+    `).join('');
+}
+
+function copyAllEmails() {
+    const emails = Array.from(document.querySelectorAll('#subscribers-list a'))
+        .map(a => a.innerText)
+        .join(', '); // Comma separated for easy copy-paste into BCC
+        
+    navigator.clipboard.writeText(emails).then(() => {
+        alert('All emails copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy emails.');
+    });
+}
+
+window.copyAllEmails = copyAllEmails;
 
 function switchTab(tabName) {
     // Update tab buttons
@@ -128,7 +183,7 @@ function switchTab(tabName) {
 // Products Management
 async function loadProducts() {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('products')
             .select('*')
             .order('created_at', { ascending: false });
@@ -154,7 +209,7 @@ function displayProducts(products) {
             <img src="${product.image_url}" alt="${product.name}" class="rounded-md mb-4 w-full h-48 object-cover">
             <h3 class="font-quicksand text-xl text-deep-charcoal mb-2">${product.name}</h3>
             <p class="text-sm text-gray-600 mb-2 line-clamp-2">${product.description || ''}</p>
-            <p class="text-lg font-bold text-coral-red mb-2">$${parseFloat(product.price).toFixed(2)}</p>
+            <p class="text-lg font-bold text-coral-red mb-2">₹${parseFloat(product.price).toFixed(2)}</p>
             <p class="text-sm text-deep-charcoal mb-4">Stock: ${product.stock_quantity} | ${product.category}</p>
             <div class="flex items-center justify-between mb-4">
                 <label class="flex items-center cursor-pointer">
@@ -194,11 +249,12 @@ function openProductModal(productId = null) {
 
 function closeProductModal() {
     document.getElementById('product-modal').classList.add('hidden');
+    removeImage(); // Cleanup preview
 }
 
 async function loadProductData(productId) {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('products')
             .select('*')
             .eq('id', productId)
@@ -213,6 +269,14 @@ async function loadProductData(productId) {
         document.getElementById('product-category').value = data.category;
         document.getElementById('product-stock').value = data.stock_quantity;
         document.getElementById('product-image').value = data.image_url;
+        
+        // Show preview
+        if (data.image_url) {
+            document.getElementById('image-preview').src = data.image_url;
+            document.getElementById('image-preview-container').classList.remove('hidden');
+            document.getElementById('product-image-file').value = ''; // Reset file input
+            document.getElementById('remove-image-btn').classList.remove('hidden');
+        }
     } catch (error) {
         console.error('Error loading product:', error);
     }
@@ -222,27 +286,62 @@ async function handleProductSubmit(e) {
     e.preventDefault();
     
     const productId = document.getElementById('product-id').value;
-    const productData = {
-        name: document.getElementById('product-name').value,
-        description: document.getElementById('product-description').value,
-        price: parseFloat(document.getElementById('product-price').value),
-        category: document.getElementById('product-category').value,
-        stock_quantity: parseInt(document.getElementById('product-stock').value),
-        image_url: document.getElementById('product-image').value,
-        is_active: true
-    };
+    const imageFile = document.getElementById('product-image-file').files[0];
+    let imageUrl = document.getElementById('product-image').value;
+
+    const statusEl = document.getElementById('upload-status');
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnText = submitBtn.innerText;
     
     try {
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Processing...';
+
+        // Upload image if selected
+        if (imageFile) {
+            statusEl.textContent = 'Uploading image...';
+            statusEl.classList.remove('hidden');
+            
+            const fileExt = imageFile.name.split('.').pop();
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+            const filePath = `${fileName}`;
+            
+            const { error: uploadError } = await db.storage
+                .from('products')
+                .upload(filePath, imageFile);
+            
+            if (uploadError) throw uploadError;
+            
+            const { data: { publicUrl } } = db.storage
+                .from('products')
+                .getPublicUrl(filePath);
+                
+            imageUrl = publicUrl;
+            statusEl.textContent = 'Upload complete!';
+        }
+
+        if (!imageUrl) throw new Error('Product image is required');
+
+        const productData = {
+            name: document.getElementById('product-name').value,
+            description: document.getElementById('product-description').value,
+            price: parseFloat(document.getElementById('product-price').value),
+            category: document.getElementById('product-category').value,
+            stock_quantity: parseInt(document.getElementById('product-stock').value),
+            image_url: imageUrl,
+            is_active: true
+        };
+
         let result;
         if (productId) {
             // Update existing product
-            result = await supabase
+            result = await db
                 .from('products')
                 .update(productData)
                 .eq('id', productId);
         } else {
             // Create new product
-            result = await supabase
+            result = await db
                 .from('products')
                 .insert([productData]);
         }
@@ -252,15 +351,20 @@ async function handleProductSubmit(e) {
         closeProductModal();
         loadProducts();
         alert(productId ? 'Product updated successfully!' : 'Product added successfully!');
+        
     } catch (error) {
         console.error('Error saving product:', error);
-        alert('Error saving product. Please try again.');
+        alert(`Error: ${error.message || 'Failed to save product'}`);
+        statusEl.textContent = 'Error uploading image';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerText = originalBtnText;
     }
 }
 
 async function toggleProductStatus(productId, isActive) {
     try {
-        const { error } = await supabase
+        const { error } = await db
             .from('products')
             .update({ is_active: isActive })
             .eq('id', productId);
@@ -277,7 +381,7 @@ async function deleteProduct(productId) {
     if (!confirm('Are you sure you want to delete this product?')) return;
     
     try {
-        const { error } = await supabase
+        const { error } = await db
             .from('products')
             .delete()
             .eq('id', productId);
@@ -296,10 +400,33 @@ window.editProduct = (productId) => openProductModal(productId);
 window.deleteProduct = deleteProduct;
 window.toggleProductStatus = toggleProductStatus;
 
+// Image Handling Functions
+function handleImageSelect(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('image-preview').src = e.target.result;
+            document.getElementById('image-preview-container').classList.remove('hidden');
+            document.getElementById('remove-image-btn').classList.remove('hidden');
+        }
+        reader.readAsDataURL(file);
+    }
+}
+
+function removeImage() {
+    document.getElementById('product-image-file').value = '';
+    document.getElementById('product-image').value = '';
+    document.getElementById('image-preview').src = '';
+    document.getElementById('image-preview-container').classList.add('hidden');
+    document.getElementById('remove-image-btn').classList.add('hidden');
+    document.getElementById('upload-status').classList.add('hidden');
+}
+
 // Orders Management
 async function loadOrders() {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('orders')
             .select(`
                 *,
@@ -340,7 +467,7 @@ function displayOrders(orders) {
                         <p class="text-sm text-gray-600">${order.customer_phone}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-lg font-bold text-coral-red">$${parseFloat(order.total_amount).toFixed(2)}</p>
+                        <p class="text-lg font-bold text-coral-red">₹${parseFloat(order.total_amount).toFixed(2)}</p>
                         <p class="text-sm text-gray-600">${itemCount} item${itemCount !== 1 ? 's' : ''}</p>
                     </div>
                     <div class="text-right">
@@ -383,7 +510,7 @@ function updatePendingOrdersBadge(orders) {
 
 async function viewOrderDetails(orderId) {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('orders')
             .select(`
                 *,
@@ -410,8 +537,8 @@ function displayOrderDetails(order) {
         <tr>
             <td class="py-2">${item.product_name}</td>
             <td class="py-2 text-center">${item.quantity}</td>
-            <td class="py-2 text-right">$${parseFloat(item.product_price).toFixed(2)}</td>
-            <td class="py-2 text-right font-bold">$${parseFloat(item.subtotal).toFixed(2)}</td>
+            <td class="py-2 text-right">₹${parseFloat(item.product_price).toFixed(2)}</td>
+            <td class="py-2 text-right font-bold">₹${parseFloat(item.subtotal).toFixed(2)}</td>
         </tr>
     `).join('');
     
@@ -448,7 +575,7 @@ function displayOrderDetails(order) {
                 ${itemsHtml}
                 <tr class="border-t-2 border-coral-red">
                     <td colspan="3" class="py-2 text-right font-bold">Total:</td>
-                    <td class="py-2 text-right font-bold text-coral-red text-xl">$${parseFloat(order.total_amount).toFixed(2)}</td>
+                    <td class="py-2 text-right font-bold text-coral-red text-xl">₹${parseFloat(order.total_amount).toFixed(2)}</td>
                 </tr>
             </tbody>
         </table>
@@ -480,7 +607,7 @@ async function confirmPayment(orderId) {
     if (!confirm('Have you verified the payment in your UPI app?')) return;
     
     try {
-        const { error } = await supabase
+        const { error } = await db
             .from('orders')
             .update({
                 payment_status: 'admin_verified',
@@ -504,7 +631,7 @@ async function rejectPayment(orderId) {
     if (!reason) return;
     
     try {
-        const { error } = await supabase
+        const { error } = await db
             .from('orders')
             .update({
                 payment_status: 'failed',
@@ -526,7 +653,7 @@ async function rejectPayment(orderId) {
 
 async function markAsShipped(orderId) {
     try {
-        const { error } = await supabase
+        const { error } = await db
             .from('orders')
             .update({ status: 'shipped' })
             .eq('id', orderId);

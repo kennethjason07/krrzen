@@ -2,16 +2,16 @@
 
 let cart = [];
 let products = [];
-// Removed 'let supabase;' as we use window.supabaseClient
+// Use the client initialized in config.js
+// Renamed to 'db' to avoid conflict with global 'supabase' variable from library
+const db = window.supabaseClient;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    // Supabase is initialized in config.js as window.supabaseClient
-    if (!window.supabaseClient) {
-        console.error('Supabase client not initialized! Check config.js load order.');
+    if (!db) {
+        console.error('Supabase client not initialized! Check config.js.');
         return;
     }
-    const supabase = window.supabaseClient;
     
     // Load cart from localStorage
     const savedCart = localStorage.getItem('krrrzen_cart');
@@ -30,6 +30,11 @@ document.addEventListener('DOMContentLoaded', function() {
 function setupEventListeners() {
     // Cart button
     document.getElementById('cart-btn')?.addEventListener('click', openCartModal);
+
+    // Mobile menu toggle
+    document.getElementById('mobile-menu-btn')?.addEventListener('click', () => {
+        document.getElementById('mobile-nav').classList.toggle('hidden');
+    });
     
     // Close cart modal
     document.getElementById('close-cart-btn')?.addEventListener('click', closeCartModal);
@@ -45,12 +50,62 @@ function setupEventListeners() {
     
     // Close confirmation modal
     document.getElementById('close-confirmation-btn')?.addEventListener('click', closeConfirmationModal);
+    
+    // Newsletter form
+    document.getElementById('newsletter-form')?.addEventListener('submit', handleNewsletterSubmit);
+}
+
+// Newsletter Subscription
+async function handleNewsletterSubmit(e) {
+    e.preventDefault();
+    
+    const emailInput = document.getElementById('email-input');
+    const email = emailInput.value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    if (!email) return;
+    
+    // Simple email validation
+    if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+        showToast('Please enter a valid email address.');
+        return;
+    }
+    
+    try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Subscribing...';
+        
+        // Insert into subscribers table
+        const { error } = await db
+            .from('subscribers')
+            .insert([{ email }]);
+        
+        if (error) {
+            // Check for unique key violation (code 23505)
+            if (error.code === '23505' || error.message.includes('unique')) {
+                showToast('You are already subscribed!');
+            } else {
+                console.error('Newsletter error:', error);
+                showToast('Could not subscribe. Please try again.');
+            }
+        } else {
+            showToast('Thanks for subscribing!');
+            emailInput.value = '';
+        }
+    } catch (error) {
+        console.error('Newsletter error:', error);
+        showToast('Something went wrong. Please try again.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
 }
 
 // Load products from Supabase
 async function loadProducts() {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await db
             .from('products')
             .select('*')
             .eq('is_active', true)
@@ -92,7 +147,7 @@ function displayProducts(products) {
             >
             <h3 class="font-cormorant text-xl text-deep-charcoal mb-2">${product.name}</h3>
             ${product.description ? `<p class="text-sm text-gray-600 mb-2 line-clamp-2">${product.description}</p>` : ''}
-            <p class="font-lato text-coral-red font-bold text-lg mb-3">$${parseFloat(product.price).toFixed(2)}</p>
+            <p class="font-lato text-coral-red font-bold text-lg mb-3">₹${parseFloat(product.price).toFixed(2)}</p>
             ${product.stock_quantity > 0 ? `
                 <button 
                     onclick="addToCart('${product.id}')" 
@@ -215,7 +270,7 @@ function displayCartItems() {
                 <p class="text-deep-charcoal mt-4">Your cart is empty</p>
             </div>
         `;
-        totalEl.textContent = '$0.00';
+        totalEl.textContent = '₹0.00';
         return;
     }
     
@@ -224,7 +279,7 @@ function displayCartItems() {
             <img src="${item.image_url}" alt="${item.name}" class="w-20 h-20 object-cover rounded">
             <div class="flex-1">
                 <h4 class="font-quicksand font-bold text-deep-charcoal">${item.name}</h4>
-                <p class="text-sm text-coral-red">$${parseFloat(item.price).toFixed(2)}</p>
+                <p class="text-sm text-coral-red">₹${parseFloat(item.price).toFixed(2)}</p>
             </div>
             <div class="flex items-center gap-2">
                 <button onclick="updateQuantity('${item.id}', -1)" class="bg-soft-pink text-deep-charcoal w-8 h-8 rounded-full hover:bg-coral-red hover:text-white transition-colors">
@@ -241,7 +296,7 @@ function displayCartItems() {
         </div>
     `).join('');
     
-    totalEl.textContent = `$${getCartTotal().toFixed(2)}`;
+    totalEl.textContent = `₹${getCartTotal().toFixed(2)}`;
 }
 
 function openCheckoutModal() {
@@ -269,12 +324,12 @@ function displayCheckoutSummary() {
     container.innerHTML = cart.map(item => `
         <div class="flex justify-between items-center mb-2">
             <span class="text-sm">${item.name} × ${item.quantity}</span>
-            <span class="text-sm font-bold">$${(item.price * item.quantity).toFixed(2)}</span>
+            <span class="text-sm font-bold">₹${(item.price * item.quantity).toFixed(2)}</span>
         </div>
     `).join('');
     
-    totalEl.textContent = `$${total.toFixed(2)}`;
-    paymentAmountEl.textContent = `$${total.toFixed(2)}`;
+    totalEl.textContent = `₹${total.toFixed(2)}`;
+    paymentAmountEl.textContent = `₹${total.toFixed(2)}`;
 }
 
 async function handleCheckout(e) {
@@ -290,7 +345,7 @@ async function handleCheckout(e) {
     // Create UPI payment link
     const upiId = SUPABASE_CONFIG.upiId;
     const amount = totalAmount.toFixed(2);
-    const upiLink = `upi://pay?pa=${upiId}&pn=krrrZen&am=${amount}&cu=USD&tn=Order Payment`;
+    const upiLink = `upi://pay?pa=${upiId}&pn=krrrZen&am=${amount}&cu=INR&tn=Order Payment`;
     
     // Open UPI app
     window.location.href = upiLink;
@@ -309,7 +364,7 @@ async function handleCheckout(e) {
                 payment_status: 'user_confirmed'
             };
             
-            const { data: order, error: orderError } = await supabase
+            const { data: order, error: orderError } = await db
                 .from('orders')
                 .insert([orderData])
                 .select()
@@ -327,7 +382,7 @@ async function handleCheckout(e) {
                 subtotal: item.price * item.quantity
             }));
             
-            const { error: itemsError } = await supabase
+            const { error: itemsError } = await db
                 .from('order_items')
                 .insert(orderItems);
             
