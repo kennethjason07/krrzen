@@ -330,6 +330,20 @@ function displayCheckoutSummary() {
     
     totalEl.textContent = `₹${total.toFixed(2)}`;
     paymentAmountEl.textContent = `₹${total.toFixed(2)}`;
+    
+    // Setup UPI & QR Code
+    const upiId = SUPABASE_CONFIG.upiId;
+    const amount = total.toFixed(2);
+    const upiLink = `upi://pay?pa=${upiId}&pn=krrrZen&am=${amount}&cu=INR&tn=Order Payment`;
+    
+    // Set QR Code
+    document.getElementById('payment-qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
+    
+    // Setup Mobile Button
+    const mobileBtn = document.getElementById('open-upi-btn');
+    if (mobileBtn) {
+        mobileBtn.onclick = () => window.location.href = upiLink;
+    }
 }
 
 async function handleCheckout(e) {
@@ -339,75 +353,69 @@ async function handleCheckout(e) {
     const customerEmail = document.getElementById('customer-email').value;
     const customerPhone = document.getElementById('customer-phone').value;
     const customerAddress = document.getElementById('customer-address').value;
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
     
     const totalAmount = getCartTotal();
     
-    // Create UPI payment link
-    const upiId = SUPABASE_CONFIG.upiId;
-    const amount = totalAmount.toFixed(2);
-    const upiLink = `upi://pay?pa=${upiId}&pn=krrrZen&am=${amount}&cu=INR&tn=Order Payment`;
-    
-    // Open UPI app
-    window.location.href = upiLink;
-    
-    // Wait a moment for UPI app to open, then create order
-    setTimeout(async () => {
-        try {
-            // Create order in database
-            const orderData = {
-                customer_name: customerName,
-                customer_email: customerEmail,
-                customer_phone: customerPhone,
-                customer_address: customerAddress,
-                total_amount: totalAmount,
-                status: 'pending',
-                payment_status: 'user_confirmed'
-            };
-            
-            const { data: order, error: orderError } = await db
-                .from('orders')
-                .insert([orderData])
-                .select()
-                .single();
-            
-            if (orderError) throw orderError;
-            
-            // Create order items
-            const orderItems = cart.map(item => ({
-                order_id: order.id,
-                product_id: item.id,
-                product_name: item.name,
-                product_price: item.price,
-                quantity: item.quantity,
-                subtotal: item.price * item.quantity
-            }));
-            
-            const { error: itemsError } = await db
-                .from('order_items')
-                .insert(orderItems);
-            
-            if (itemsError) throw itemsError;
-            
-            // Clear cart
-            cart = [];
-            saveCart();
-            updateCartUI();
-            
-            // Close checkout modal
-            closeCheckoutModal();
-            
-            // Show confirmation
-            document.getElementById('order-id').textContent = order.id.substring(0, 8);
-            document.getElementById('confirmation-modal').classList.remove('hidden');
-            
-            // Reset form
-            document.getElementById('checkout-form').reset();
-            
-        } catch (error) {
-            console.error('Error creating order:', error);
-            alert('Error placing order. Please try again or contact support.');
-        }
-    }, 1000);
+    try {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Processing...';
+
+        // Create order in database
+        const orderData = {
+            customer_name: customerName,
+            customer_email: customerEmail,
+            customer_phone: customerPhone,
+            customer_address: customerAddress,
+            total_amount: totalAmount,
+            status: 'pending',
+            payment_status: 'user_confirmed'
+        };
+        
+        const { data: order, error: orderError } = await db
+            .from('orders')
+            .insert([orderData])
+            .select()
+            .single();
+        
+        if (orderError) throw orderError;
+        
+        // Create order items
+        const orderItems = cart.map(item => ({
+            order_id: order.id,
+            product_id: item.id,
+            product_name: item.name,
+            product_price: item.price,
+            quantity: item.quantity,
+            subtotal: item.price * item.quantity
+        }));
+        
+        const { error: itemsError } = await db
+            .from('order_items')
+            .insert(orderItems);
+        
+        if (itemsError) throw itemsError;
+        
+        // Clear cart
+        cart = [];
+        saveCart();
+        updateCartUI();
+        
+        // Close checkout modal
+        closeCheckoutModal();
+        
+        // Show confirmation
+        document.getElementById('order-id').textContent = order.id.substring(0, 8);
+        document.getElementById('confirmation-modal').classList.remove('hidden');
+        
+    } catch (error) {
+        console.error('Checkout error:', error);
+        alert('Error placing order. Please try again.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
 }
 
 function closeConfirmationModal() {

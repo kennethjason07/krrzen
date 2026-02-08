@@ -310,16 +310,22 @@
 
           <div class="bg-yellow-100 border border-yellow-400 rounded-lg p-4 mb-6">
             <p class="font-bold text-yellow-900 mb-2">💳 Payment Instructions</p>
-            <p class="text-sm text-yellow-800 mb-2">Please pay <span id="payment-amount" class="font-bold">$0.00</span> to the following UPI ID:</p>
-            <div class="bg-white rounded p-3 mb-2">
-              <p class="font-mono text-lg text-center font-bold text-deep-charcoal">9972312878@ybl</p>
+            <p class="text-sm text-yellow-800 mb-2">Please pay <span id="payment-amount" class="font-bold">₹0.00</span> to the following UPI ID or Scan the QR Code:</p>
+            <div class="bg-white rounded p-3 mb-2 flex flex-col items-center">
+              <p class="font-mono text-lg text-center font-bold text-deep-charcoal mb-2">7619107621@ybl</p>
+              <img id="payment-qr-code" src="" alt="Scan to Pay" class="w-48 h-48 border border-gray-200 rounded">
             </div>
             <p class="text-xs text-yellow-800">After completing the payment, click "Confirm Order" below. Our admin will verify your payment and confirm your order.</p>
           </div>
 
-          <button type="submit" class="w-full bg-coral-red text-white font-quicksand font-bold py-3 px-6 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">
-            Open UPI & Confirm Order
-          </button>
+          <div class="flex flex-col gap-3">
+              <button type="button" id="open-upi-btn" class="w-full bg-soft-pink text-deep-charcoal font-quicksand font-bold py-3 px-6 rounded-full shadow hover:bg-opacity-90 transition-colors md:hidden">
+                Open UPI App
+              </button>
+              <button type="submit" class="w-full bg-coral-red text-white font-quicksand font-bold py-3 px-6 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">
+                Confirm Order (Payment Done)
+              </button>
+          </div>
         </form>
       </div>
     </div>
@@ -333,7 +339,10 @@
         <h3 class="font-playfair text-2xl text-deep-charcoal mb-4">Order Placed Successfully!</h3>
         <p class="font-karla text-deep-charcoal mb-2">Thank you for your order!</p>
         <p class="font-karla text-sm text-gray-600 mb-6">Our admin will verify your payment and confirm your order shortly. You will receive an email confirmation once verified.</p>
-        <p class="font-karla text-sm text-deep-charcoal mb-6">Order ID: <span id="order-id" class="font-mono font-bold"></span></p>
+        <div class="bg-gray-100 p-4 rounded-lg mb-6">
+            <p class="font-karla text-sm text-deep-charcoal mb-1">Order ID:</p>
+            <span id="order-id" class="font-mono font-bold text-xl select-all"></span>
+        </div>
         <button id="close-confirmation-btn" class="bg-coral-red text-white font-quicksand font-bold py-3 px-8 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">
           Continue Shopping
         </button>
