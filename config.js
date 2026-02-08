@@ -7,7 +7,7 @@ const SUPABASE_CONFIG = {
     anonKey: 'sb_publishable_v1SwiC5f6Iu-2dBejnOdiA_BcbKCtYb',
     
     // Payment Configuration
-    upiId: '7619107621@ybl' // UPI ID for checkout
+    upiId: '9972312878@ybl' // UPI ID for checkout
 };
 
 // Initialize Supabase client immediately

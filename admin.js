@@ -438,8 +438,27 @@ async function loadOrders() {
         
         if (error) throw error;
         
-        displayOrders(data);
-        updatePendingOrdersBadge(data);
+        // Apply Filters
+        const statusFilter = document.getElementById('order-status-filter')?.value || 'all';
+        const paymentFilter = document.getElementById('payment-status-filter')?.value || 'all';
+        
+        let filteredOrders = data;
+        
+        if (statusFilter !== 'all') {
+            filteredOrders = filteredOrders.filter(o => o.status === statusFilter);
+        }
+        
+        if (paymentFilter !== 'all') {
+            // Map the dropdown value to DB value if needed (or ensure they match)
+            // Dropdown values: user_confirmed, admin_verified, failed
+            filteredOrders = filteredOrders.filter(o => {
+                 if (paymentFilter === 'failed') return o.payment_status === 'failed';
+                 return o.payment_status === paymentFilter;
+            });
+        }
+        
+        displayOrders(filteredOrders);
+        updatePendingOrdersBadge(data); // Badge should reflect total pending actions, usually regardless of filter? Or filtering pending
     } catch (error) {
         console.error('Error loading orders:', error);
     }
@@ -449,12 +468,13 @@ function displayOrders(orders) {
     const container = document.getElementById('orders-list');
     
     if (!orders || orders.length === 0) {
-        container.innerHTML = '<p class="text-center text-deep-charcoal p-8">No orders yet.</p>';
+        container.innerHTML = '<p class="text-center text-deep-charcoal p-8">No orders found matching criteria.</p>';
         return;
     }
     
     container.innerHTML = orders.map(order => {
-        const statusColor = getStatusColor(order.payment_status);
+        const paymentColor = getStatusColor(order.payment_status);
+        const orderColor = getStatusColor(order.status);
         const itemCount = order.order_items.length;
         
         return `
@@ -470,11 +490,19 @@ function displayOrders(orders) {
                         <p class="text-lg font-bold text-coral-red">₹${parseFloat(order.total_amount).toFixed(2)}</p>
                         <p class="text-sm text-gray-600">${itemCount} item${itemCount !== 1 ? 's' : ''}</p>
                     </div>
-                    <div class="text-right">
-                        <span class="inline-block px-3 py-1 rounded-full text-sm font-quicksand ${statusColor}">
-                            ${formatStatus(order.payment_status)}
-                        </span>
-                        <p class="text-sm text-gray-600 mt-1">${formatStatus(order.status)}</p>
+                    <div class="text-right flex flex-col items-end gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-500 font-bold uppercase">Payment:</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm font-quicksand ${paymentColor}">
+                                ${formatStatus(order.payment_status)}
+                            </span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs text-gray-500 font-bold uppercase">Order:</span>
+                            <span class="inline-block px-3 py-1 rounded-full text-sm font-quicksand ${orderColor}">
+                                ${formatStatus(order.status)}
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -484,12 +512,16 @@ function displayOrders(orders) {
 
 function getStatusColor(status) {
     const colors = {
-        'pending': 'bg-gray-300 text-gray-800',
-        'user_confirmed': 'bg-yellow-300 text-yellow-900',
-        'admin_verified': 'bg-green-300 text-green-900',
-        'failed': 'bg-red-300 text-red-900'
+        'pending': 'bg-gray-200 text-gray-800',
+        'user_confirmed': 'bg-yellow-200 text-yellow-900',
+        'admin_verified': 'bg-green-200 text-green-900',
+        'confirmed': 'bg-blue-200 text-blue-900',
+        'shipped': 'bg-purple-200 text-purple-900',
+        'delivered': 'bg-green-300 text-green-900',
+        'failed': 'bg-red-200 text-red-900',
+        'cancelled': 'bg-red-200 text-red-900'
     };
-    return colors[status] || 'bg-gray-300 text-gray-800';
+    return colors[status] || 'bg-gray-200 text-gray-800';
 }
 
 function formatStatus(status) {
@@ -600,6 +632,12 @@ function displayOrderDetails(order) {
                 Mark as Shipped
             </button>
         ` : ''}
+
+        ${order.status !== 'cancelled' && order.status !== 'delivered' && order.status !== 'shipped' && order.payment_status !== 'user_confirmed' ? `
+            <button onclick="cancelOrder('${order.id}')" class="w-full mt-4 bg-gray-400 text-white font-quicksand font-bold py-3 px-6 rounded-full hover:bg-gray-500 transition-colors">
+                Cancel Order
+            </button>
+        ` : ''}
     `;
 }
 
@@ -669,6 +707,36 @@ async function markAsShipped(orderId) {
     }
 }
 
+async function cancelOrder(orderId) {
+    if (!confirm('Are you sure you want to cancel this order?')) return;
+    
+    const reason = prompt('Optional: Enter cancellation reason (or leave empty):');
+    
+    try {
+        const updateData = {
+            status: 'cancelled'
+        };
+        
+        if (reason) {
+            updateData.admin_notes = reason;
+        }
+
+        const { error } = await db
+            .from('orders')
+            .update(updateData)
+            .eq('id', orderId);
+        
+        if (error) throw error;
+        
+        closeOrderModal();
+        loadOrders();
+        alert('Order cancelled successfully!');
+    } catch (error) {
+        console.error('Error cancelling order:', error);
+        alert('Error cancelling order. Please try again.');
+    }
+}
+
 function closeOrderModal() {
     document.getElementById('order-modal').classList.add('hidden');
 }
@@ -677,6 +745,7 @@ window.viewOrderDetails = viewOrderDetails;
 window.confirmPayment = confirmPayment;
 window.rejectPayment = rejectPayment;
 window.markAsShipped = markAsShipped;
+window.cancelOrder = cancelOrder;
 
 // Poll for new orders every 30 seconds
 let orderPollingInterval;
