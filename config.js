@@ -7,7 +7,8 @@ const SUPABASE_CONFIG = {
     anonKey: 'sb_publishable_v1SwiC5f6Iu-2dBejnOdiA_BcbKCtYb',
     
     // Payment Configuration
-    upiId: '9972312878@ybl' // UPI ID for checkout
+    upiId: '9972312878@ybl', // UPI ID for checkout
+    payeeName: 'KRUPA PRARTHANA' // Payee Name for UPI (Must match bank records)
 };
 
 // Initialize Supabase client immediately

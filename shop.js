@@ -333,10 +333,23 @@ function displayCheckoutSummary() {
     
     // Setup UPI & QR Code
     const upiId = SUPABASE_CONFIG.upiId;
+    const payeeName = SUPABASE_CONFIG.payeeName || 'Make Payment';
     const amount = total.toFixed(2);
-    const upiLink = `upi://pay?pa=${upiId}&pn=krrrZen&am=${amount}&cu=INR&tn=Order Payment`;
+    const txnRef = `txn_${Date.now()}`; // Unique transaction reference
+    
+    // Construct UPI link with more parameters to avoid security rejections
+    // pa: Payee Address
+    // pn: Payee Name
+    // am: Amount
+    // cu: Currency
+    // tn: Transaction Note
+    // tr: Transaction Reference ID
+    // mc: Merchant Code (0000 often works for P2P if not a merchant)
+    // mode: 00 (Default)
+    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(amount)}&cu=INR&tn=${encodeURIComponent('Order Payment')}&mc=0000&mode=00&tr=${txnRef}`;
     
     // Set QR Code
+    // Note: QR Server sometimes has issues with long URLs, but usually fine for standard UPI
     document.getElementById('payment-qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
     
     // Setup Mobile Button
