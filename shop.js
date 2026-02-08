@@ -333,12 +333,12 @@ function displayCheckoutSummary() {
     
     // Setup UPI & QR Code
     const upiId = SUPABASE_CONFIG.upiId;
-    const payeeName = SUPABASE_CONFIG.payeeName || 'Make Payment';
     const amount = total.toFixed(2);
     
-    // Construct simplified UPI link for P2P (Personal to Personal) transfer
-    // Complex parameters often trigger security checks for non-merchant accounts
-    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(amount)}&cu=INR&tn=${encodeURIComponent('Order Payment')}`;
+    // Construct MINIMAL UPI link
+    // Removing 'pn' (Payee Name) allows the UPI app to verify the VPA itself
+    // Removing 'tn' (Note) avoids character encoding flags
+    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&am=${encodeURIComponent(amount)}&cu=INR`;
     
     // Set QR Code
     // Note: QR Server sometimes has issues with long URLs, but usually fine for standard UPI
