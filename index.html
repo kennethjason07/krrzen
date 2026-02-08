@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="krrrZen - Handcrafted treasures that speak from the heart. Discover unique crochet creations and artisanal jewelry."
+    />
+    <title>krrrZen - Handcrafted Treasures</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Quicksand:wght@700&family=Cormorant+Garamond:wght@700&family=Lato&family=Poppins&family=Karla&family=DM+Sans&family=Great+Vibes&family=Dancing+Script&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="bg-soft-pink font-lato text-deep-charcoal">
+    <!-- Header -->
+    <header class="bg-ivory shadow-md" id="header">
+      <div
+        class="container mx-auto px-4 py-4 flex justify-between items-center"
+      >
+        <div class="flex items-center space-x-2">
+          <span class="font-great-vibes text-4xl text-coral-red">krrrZen</span>
+        </div>
+        <nav class="hidden md:flex space-x-8" id="desktop-nav">
+          <a
+            class="font-quicksand text-deep-charcoal hover:text-coral-red transition-colors"
+            href="#crochet"
+            >Crochet</a
+          >
+          <a
+            class="font-quicksand text-deep-charcoal hover:text-coral-red transition-colors"
+            href="#jewelry"
+            >Jewelry</a
+          >
+          <a
+            class="font-quicksand text-deep-charcoal hover:text-coral-red transition-colors"
+            href="#about"
+            >About</a
+          >
+          <a
+            class="font-quicksand text-deep-charcoal hover:text-coral-red transition-colors"
+            href="#contact"
+            >Contact</a
+          >
+        </nav>
+        <div class="flex items-center space-x-4">
+          <button
+            class="text-deep-charcoal hover:text-coral-red transition-colors relative"
+            id="cart-btn"
+            aria-label="Shopping cart"
+          >
+            <span class="material-icons">shopping_bag</span>
+            <span id="cart-count" class="hidden absolute -top-2 -right-2 bg-coral-red text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+          </button>
+          <button
+            class="md:hidden text-deep-charcoal"
+            id="mobile-menu-btn"
+            aria-label="Toggle mobile menu"
+          >
+            <span class="material-icons">menu</span>
+          </button>
+        </div>
+      </div>
+      <!-- Mobile Menu -->
+      <nav
+        class="md:hidden hidden bg-ivory border-t border-soft-pink"
+        id="mobile-nav"
+      >
+        <div class="container mx-auto px-4 py-4 flex flex-col space-y-4">
+          <a
+            class="font-quicksand text-deep-charcoal hover:text-coral-red transition-colors"
+            href="#crochet"
+            >Crochet</a
+          >
+          <a
+            class="font-quicksand text-deep-charcoal hover:text-coral-red transition-colors"
+            href="#jewelry"
+            >Jewelry</a
+          >
+          <a
+            class="font-quicksand text-deep-charcoal hover:text-coral-red transition-colors"
+            href="#about"
+            >About</a
+          >
+          <a
+            class="font-quicksand text-deep-charcoal hover:text-coral-red transition-colors"
+            href="#contact"
+            >Contact</a
+          >
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Hero Section -->
+      <section class="text-center py-16 px-4">
+        <h1
+          class="font-great-vibes text-6xl text-coral-red mb-2 animate-fade-in"
+        >
+          krrrZen
+        </h1>
+        <p class="font-karla text-lg text-deep-charcoal mb-8">
+          Handcrafted treasures that speak from the heart.
+        </p>
+        <a
+          class="bg-coral-red text-white font-quicksand font-bold py-3 px-8 rounded-full shadow-lg hover:bg-opacity-90 hover:shadow-xl transition-all transform hover:scale-105"
+          href="#products"
+          >Explore Collection</a
+        >
+      </section>
+
+      <!-- Featured Products Section -->
+      <section class="py-12 px-4" id="products">
+        <h2 class="text-center font-playfair text-4xl text-deep-charcoal mb-12">
+          Featured Products
+        </h2>
+        <div id="products-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+          <!-- Products will be loaded dynamically from Supabase -->
+          <div class="col-span-full text-center py-12">
+            <p class="text-deep-charcoal">Loading products...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- About Section -->
+      <section class="py-16 px-4 bg-ivory" id="about">
+        <div class="max-w-3xl mx-auto text-center">
+          <p class="font-dancing-script text-3xl text-coral-red mb-6">
+            "Crafted with love, worn with joy."
+          </p>
+          <p class="font-karla text-deep-charcoal leading-relaxed">
+            At krrrZen, we believe in the magic of handcrafted items. Each
+            piece, whether a soft crochet creation or a sparkling piece of
+            jewelry, is made with passion and meticulous attention to detail.
+            Our goal is to bring a little bit of warmth and elegance into your
+            life through our unique, artisanal treasures.
+          </p>
+        </div>
+      </section>
+
+      <!-- Testimonials Section -->
+      <section class="py-12 px-4">
+        <h2 class="text-center font-playfair text-4xl text-deep-charcoal mb-12">
+          What Our Customers Say
+        </h2>
+        <div
+          class="max-w-xl mx-auto bg-ivory rounded-lg shadow-md p-8 relative"
+        >
+          <span
+            class="material-icons text-sage-green text-6xl absolute top-0 left-0 -mt-4 -ml-4 opacity-50"
+            >format_quote</span
+          >
+          <p class="font-karla text-deep-charcoal italic mb-4">
+            "The quality and craftsmanship are just stunning. I get compliments
+            every time I wear my necklace. It feels so special and unique!"
+          </p>
+          <p class="font-quicksand font-bold text-deep-charcoal text-right">
+            - Jessica L.
+          </p>
+        </div>
+      </section>
+
+      <!-- Newsletter Section -->
+      <section class="bg-ivory py-16 px-4" id="contact">
+        <div class="max-w-xl mx-auto text-center">
+          <h2 class="font-playfair text-3xl text-deep-charcoal mb-4">
+            Stay in the Loop
+          </h2>
+          <p class="font-karla text-deep-charcoal mb-8">
+            Sign up for our newsletter to receive updates on new arrivals and
+            exclusive offers.
+          </p>
+          <form
+            class="flex flex-col sm:flex-row justify-center items-center gap-4"
+            id="newsletter-form"
+          >
+            <input
+              class="w-full sm:w-auto flex-grow bg-white border border-soft-pink rounded-full py-3 px-6 text-deep-charcoal placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-coral-red"
+              placeholder="Your email address"
+              type="email"
+              id="email-input"
+              required
+            />
+            <button
+              class="bg-coral-red text-white font-quicksand font-bold py-3 px-8 rounded-full shadow-lg hover:bg-opacity-90 hover:shadow-xl transition-all transform hover:scale-105 w-full sm:w-auto"
+              type="submit"
+            >
+              Subscribe
+            </button>
+          </form>
+          <p
+            class="mt-4 text-sm font-karla text-deep-charcoal hidden"
+            id="form-message"
+          ></p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-deep-charcoal text-white py-8 px-4">
+      <div class="max-w-6xl mx-auto text-center">
+        <div class="flex justify-center space-x-6 mb-4">
+          <a
+            class="hover:text-soft-pink transition-colors"
+            href="https://facebook.com"
+            aria-label="Facebook"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span class="material-icons">facebook</span>
+          </a>
+          <a
+            class="hover:text-soft-pink transition-colors"
+            href="https://instagram.com"
+            aria-label="Instagram"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span class="material-icons">camera_alt</span>
+          </a>
+          <a
+            class="hover:text-soft-pink transition-colors"
+            href="https://pinterest.com"
+            aria-label="Pinterest"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <span class="material-icons">pinterest</span>
+          </a>
+        </div>
+        <p class="font-karla text-sm">© 2024 krrrZen. All Rights Reserved.</p>
+      </div>
+    </footer>
+
+    <!-- Cart Modal -->
+    <div id="cart-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+      <div class="bg-ivory rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="font-playfair text-2xl text-deep-charcoal">Shopping Cart</h3>
+          <button id="close-cart-btn" class="text-deep-charcoal hover:text-coral-red">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <div id="cart-items" class="mb-6">
+          <!-- Cart items will be populated here -->
+        </div>
+        <div class="border-t-2 border-coral-red pt-4">
+          <div class="flex justify-between items-center mb-6">
+            <span class="font-quicksand font-bold text-xl">Total:</span>
+            <span id="cart-total" class="font-quicksand font-bold text-2xl text-coral-red">$0.00</span>
+          </div>
+          <button id="checkout-btn" class="w-full bg-coral-red text-white font-quicksand font-bold py-3 px-6 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">
+            Proceed to Checkout
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+      <div class="bg-ivory rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="font-playfair text-2xl text-deep-charcoal">Checkout</h3>
+          <button id="close-checkout-btn" class="text-deep-charcoal hover:text-coral-red">
+            <span class="material-icons">close</span>
+          </button>
+        </div>
+        <form id="checkout-form">
+          <div class="mb-4">
+            <label class="block text-deep-charcoal mb-2" for="customer-name">Full Name *</label>
+            <input class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" type="text" id="customer-name" required>
+          </div>
+          <div class="mb-4">
+            <label class="block text-deep-charcoal mb-2" for="customer-email">Email *</label>
+            <input class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" type="email" id="customer-email" required>
+          </div>
+          <div class="mb-4">
+            <label class="block text-deep-charcoal mb-2" for="customer-phone">Phone Number *</label>
+            <input class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" type="tel" id="customer-phone" required>
+          </div>
+          <div class="mb-6">
+            <label class="block text-deep-charcoal mb-2" for="customer-address">Delivery Address *</label>
+            <textarea class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" id="customer-address" rows="3" required></textarea>
+          </div>
+          
+          <div class="bg-soft-pink rounded-lg p-4 mb-6">
+            <h4 class="font-quicksand font-bold text-deep-charcoal mb-3">Order Summary</h4>
+            <div id="checkout-items" class="mb-3">
+              <!-- Order items will be listed here -->
+            </div>
+            <div class="border-t border-coral-red pt-3">
+              <div class="flex justify-between items-center">
+                <span class="font-quicksand font-bold">Total Amount:</span>
+                <span id="checkout-total" class="font-quicksand font-bold text-xl text-coral-red">$0.00</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-yellow-100 border border-yellow-400 rounded-lg p-4 mb-6">
+            <p class="font-bold text-yellow-900 mb-2">💳 Payment Instructions</p>
+            <p class="text-sm text-yellow-800 mb-2">Please pay <span id="payment-amount" class="font-bold">$0.00</span> to the following UPI ID:</p>
+            <div class="bg-white rounded p-3 mb-2">
+              <p class="font-mono text-lg text-center font-bold text-deep-charcoal">9972312878@ybl</p>
+            </div>
+            <p class="text-xs text-yellow-800">After completing the payment, click "Confirm Order" below. Our admin will verify your payment and confirm your order.</p>
+          </div>
+
+          <button type="submit" class="w-full bg-coral-red text-white font-quicksand font-bold py-3 px-6 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">
+            Open UPI & Confirm Order
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Order Confirmation Modal -->
+    <div id="confirmation-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+      <div class="bg-ivory rounded-lg shadow-xl p-8 max-w-md w-full text-center">
+        <div class="mb-6">
+          <span class="material-icons text-sage-green" style="font-size: 64px;">check_circle</span>
+        </div>
+        <h3 class="font-playfair text-2xl text-deep-charcoal mb-4">Order Placed Successfully!</h3>
+        <p class="font-karla text-deep-charcoal mb-2">Thank you for your order!</p>
+        <p class="font-karla text-sm text-gray-600 mb-6">Our admin will verify your payment and confirm your order shortly. You will receive an email confirmation once verified.</p>
+        <p class="font-karla text-sm text-deep-charcoal mb-6">Order ID: <span id="order-id" class="font-mono font-bold"></span></p>
+        <button id="close-confirmation-btn" class="bg-coral-red text-white font-quicksand font-bold py-3 px-8 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">
+          Continue Shopping
+        </button>
+      </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="shop.js"></script>
+  </body>
+</html>

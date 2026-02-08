@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - krrrZen</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Quicksand:wght@700&family=Karla&family=Great+Vibes&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-soft-pink font-karla text-deep-charcoal">
+    <!-- Login Screen -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center px-4">
+        <div class="bg-ivory rounded-lg shadow-xl p-8 max-w-md w-full">
+            <h1 class="font-great-vibes text-4xl text-coral-red text-center mb-2">krrrZen</h1>
+            <h2 class="font-quicksand text-xl text-center mb-8">Admin Panel</h2>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label class="block text-deep-charcoal mb-2" for="admin-email">Email</label>
+                    <input class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" type="email" id="admin-email" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-deep-charcoal mb-2" for="admin-password">Password</label>
+                    <input class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" type="password" id="admin-password" required>
+                </div>
+                <button class="w-full bg-coral-red text-white font-quicksand font-bold py-3 px-8 rounded-full shadow-lg hover:bg-opacity-90 transition-colors" type="submit">Login</button>
+                <p class="mt-4 text-sm text-center hidden" id="login-error"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Dashboard -->
+    <div id="admin-dashboard" class="hidden">
+        <!-- Header -->
+        <header class="bg-ivory shadow-md">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+                <span class="font-great-vibes text-3xl text-coral-red">krrrZen Admin</span>
+                <div class="flex items-center space-x-4">
+                    <span id="admin-name" class="text-deep-charcoal"></span>
+                    <button id="logout-btn" class="bg-coral-red text-white px-4 py-2 rounded-full hover:bg-opacity-90 transition-colors">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white border-b border-soft-pink">
+            <div class="container mx-auto px-4">
+                <nav class="flex space-x-8">
+                    <button class="tab-btn py-4 px-2 border-b-2 border-coral-red text-coral-red font-quicksand" data-tab="products">Products</button>
+                    <button class="tab-btn py-4 px-2 border-b-2 border-transparent text-deep-charcoal hover:text-coral-red font-quicksand" data-tab="orders">
+                        Orders <span id="pending-orders-badge" class="hidden ml-2 bg-coral-red text-white text-xs px-2 py-1 rounded-full"></span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="products-tab" class="tab-content container mx-auto px-4 py-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-playfair text-3xl text-deep-charcoal">Manage Products</h2>
+                <button id="add-product-btn" class="bg-coral-red text-white font-quicksand font-bold py-3 px-6 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">
+                    <span class="material-icons align-middle">add</span> Add Product
+                </button>
+            </div>
+            <div id="products-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+
+        <!-- Orders Tab -->
+        <div id="orders-tab" class="tab-content container mx-auto px-4 py-8 hidden">
+            <h2 class="font-playfair text-3xl text-deep-charcoal mb-6">Manage Orders</h2>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div id="orders-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Product Modal -->
+    <div id="product-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+        <div class="bg-ivory rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 class="font-playfair text-2xl text-deep-charcoal mb-6" id="product-modal-title">Add Product</h3>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+                <div class="mb-4">
+                    <label class="block text-deep-charcoal mb-2" for="product-name">Product Name *</label>
+                    <input class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" type="text" id="product-name" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-deep-charcoal mb-2" for="product-description">Description</label>
+                    <textarea class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" id="product-description" rows="3"></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-deep-charcoal mb-2" for="product-price">Price ($) *</label>
+                    <input class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" type="number" step="0.01" id="product-price" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-deep-charcoal mb-2" for="product-category">Category *</label>
+                    <select class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" id="product-category" required>
+                        <option value="">Select Category</option>
+                        <option value="crochet">Crochet</option>
+                        <option value="jewelry">Jewelry</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-deep-charcoal mb-2" for="product-stock">Stock Quantity *</label>
+                    <input class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" type="number" id="product-stock" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-deep-charcoal mb-2" for="product-image">Image URL *</label>
+                    <input class="w-full bg-white border border-soft-pink rounded-lg py-3 px-4 text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-coral-red" type="url" id="product-image" required>
+                    <p class="text-sm text-gray-600 mt-1">Enter the full URL of the product image</p>
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-coral-red text-white font-quicksand font-bold py-3 px-6 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">Save Product</button>
+                    <button type="button" id="cancel-product-btn" class="flex-1 bg-gray-400 text-white font-quicksand font-bold py-3 px-6 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div id="order-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+        <div class="bg-ivory rounded-lg shadow-xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-6">
+                <h3 class="font-playfair text-2xl text-deep-charcoal">Order Details</h3>
+                <button id="close-order-modal" class="text-deep-charcoal hover:text-coral-red">
+                    <span class="material-icons">close</span>
+                </button>
+            </div>
+            <div id="order-details-content"></div>
+        </div>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>

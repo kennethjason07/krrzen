@@ -1,0 +1,239 @@
+/* Custom CSS Variables and Styles for krrrZen */
+
+:root {
+  --soft-pink: #ffcdd2;
+  --coral-red: #ef5350;
+  --sage-green: #c5e1a5;
+  --ivory: #fff8f0;
+  --deep-charcoal: #333333;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--soft-pink);
+  overflow-x: hidden;
+}
+
+/* Custom Font Classes */
+.font-playfair {
+  font-family: "Playfair Display", serif;
+}
+
+.font-quicksand {
+  font-family: "Quicksand", sans-serif;
+}
+
+.font-cormorant {
+  font-family: "Cormorant Garamond", serif;
+}
+
+.font-lato {
+  font-family: "Lato", sans-serif;
+}
+
+.font-poppins {
+  font-family: "Poppins", sans-serif;
+}
+
+.font-karla {
+  font-family: "Karla", sans-serif;
+}
+
+.font-dm-sans {
+  font-family: "DM Sans", sans-serif;
+}
+
+.font-great-vibes {
+  font-family: "Great Vibes", cursive;
+}
+
+.font-dancing-script {
+  font-family: "Dancing Script", cursive;
+}
+
+/* Custom Color Classes */
+.bg-soft-pink {
+  background-color: var(--soft-pink);
+}
+
+.bg-coral-red {
+  background-color: var(--coral-red);
+}
+
+.text-coral-red {
+  color: var(--coral-red);
+}
+
+.border-coral-red {
+  border-color: var(--coral-red);
+}
+
+.bg-sage-green {
+  background-color: var(--sage-green);
+}
+
+.text-sage-green {
+  color: var(--sage-green);
+}
+
+.bg-ivory {
+  background-color: var(--ivory);
+}
+
+.border-soft-pink {
+  border-color: var(--soft-pink);
+}
+
+.text-deep-charcoal {
+  color: var(--deep-charcoal);
+}
+
+.bg-deep-charcoal {
+  background-color: var(--deep-charcoal);
+}
+
+/* Smooth Scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 1s ease-in-out;
+}
+
+/* Product Card Hover Effects */
+.product-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Button Hover Effects */
+button,
+a[class*="bg-coral-red"] {
+  transition: all 0.3s ease;
+}
+
+button:hover,
+a[class*="bg-coral-red"]:hover {
+  transform: translateY(-2px);
+}
+
+/* Form Focus States */
+input:focus {
+  outline: none;
+  border-color: var(--coral-red);
+  box-shadow: 0 0 0 3px rgba(239, 83, 80, 0.1);
+}
+
+/* Mobile Menu Transition */
+#mobile-nav {
+  transition: max-height 0.3s ease-in-out;
+  max-height: 0;
+  overflow: hidden;
+}
+
+#mobile-nav.active {
+  max-height: 300px;
+}
+
+/* Responsive Typography */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 3rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+}
+
+/* Loading State */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Success Message */
+.success-message {
+  color: var(--sage-green);
+  background-color: rgba(197, 225, 165, 0.1);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--sage-green);
+}
+
+/* Error Message */
+.error-message {
+  color: var(--coral-red);
+  background-color: rgba(239, 83, 80, 0.1);
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--coral-red);
+}
+
+/* Accessibility - Skip to Main Content */
+.skip-to-main {
+  position: absolute;
+  left: -9999px;
+  z-index: 999;
+  padding: 1em;
+  background-color: var(--coral-red);
+  color: white;
+  text-decoration: none;
+}
+
+.skip-to-main:focus {
+  left: 50%;
+  transform: translateX(-50%);
+  top: 0;
+}
+
+/* Image Loading State */
+img {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+img[loading="lazy"] {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+img[loading="lazy"].loaded {
+  opacity: 1;
+}
+
+/* Print Styles */
+@media print {
+  header,
+  footer,
+  #newsletter-form {
+    display: none;
+  }
+
+  body {
+    background-color: white;
+  }
+}
