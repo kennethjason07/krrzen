@@ -335,18 +335,10 @@ function displayCheckoutSummary() {
     const upiId = SUPABASE_CONFIG.upiId;
     const payeeName = SUPABASE_CONFIG.payeeName || 'Make Payment';
     const amount = total.toFixed(2);
-    const txnRef = `txn_${Date.now()}`; // Unique transaction reference
     
-    // Construct UPI link with more parameters to avoid security rejections
-    // pa: Payee Address
-    // pn: Payee Name
-    // am: Amount
-    // cu: Currency
-    // tn: Transaction Note
-    // tr: Transaction Reference ID
-    // mc: Merchant Code (0000 often works for P2P if not a merchant)
-    // mode: 00 (Default)
-    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(amount)}&cu=INR&tn=${encodeURIComponent('Order Payment')}&mc=0000&mode=00&tr=${txnRef}`;
+    // Construct simplified UPI link for P2P (Personal to Personal) transfer
+    // Complex parameters often trigger security checks for non-merchant accounts
+    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(amount)}&cu=INR&tn=${encodeURIComponent('Order Payment')}`;
     
     // Set QR Code
     // Note: QR Server sometimes has issues with long URLs, but usually fine for standard UPI
