@@ -319,13 +319,15 @@
           </div>
 
           <div class="flex flex-col gap-3">
-              <button type="button" id="open-upi-btn" class="w-full bg-soft-pink text-deep-charcoal font-quicksand font-bold py-3 px-6 rounded-full shadow hover:bg-opacity-90 transition-colors md:hidden">
-                Open UPI App
+              <!-- Copy Button is now Primary for Mobile -->
+              <button type="button" id="copy-upi-btn" class="w-full bg-soft-pink text-deep-charcoal font-quicksand font-bold py-3 px-6 rounded-full shadow hover:bg-opacity-90 transition-colors md:hidden">
+                <span class="material-icons text-sm align-middle mr-2">content_copy</span> Copy UPI ID (Recommended)
               </button>
-              <button type="button" id="copy-upi-btn" class="w-full bg-gray-200 text-deep-charcoal font-quicksand font-bold py-3 px-6 rounded-full shadow hover:bg-gray-300 transition-colors">
-                <span class="material-icons text-sm align-middle mr-2">content_copy</span> Copy UPI ID
+              <!-- Deep Link is now Secondary -->
+              <button type="button" id="open-upi-btn" class="w-full bg-white border-2 border-soft-pink text-gray-600 font-quicksand font-bold py-3 px-6 rounded-full hover:bg-gray-50 transition-colors md:hidden">
+                 Open UPI App (Direct Link)
               </button>
-              <p class="text-xs text-center text-gray-500 md:hidden">If the button fails, please copy UPI ID or scan QR code.</p>
+              
               <button type="submit" class="w-full bg-coral-red text-white font-quicksand font-bold py-3 px-6 rounded-full shadow-lg hover:bg-opacity-90 transition-colors">
                 Confirm Order (Payment Done)
               </button>

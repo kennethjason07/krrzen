@@ -361,21 +361,46 @@ function displayCheckoutSummary() {
     const copyBtn = document.getElementById('copy-upi-btn');
     if (copyBtn) {
         copyBtn.onclick = () => {
-            navigator.clipboard.writeText(upiId).then(() => {
+             // Fallback for mobile devices that might block clipboard API in some contexts
+             // Try standard API first
+             if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(upiId).then(onCopySuccess).catch(err => {
+                    console.error('Clipboard API failed', err);
+                    fallbackCopyTextToClipboard(upiId);
+                });
+             } else {
+                 fallbackCopyTextToClipboard(upiId);
+             }
+             
+             function onCopySuccess() {
                 const originalText = copyBtn.innerHTML;
                 copyBtn.innerHTML = '<span class="material-icons text-sm align-middle mr-2">check</span> Copied!';
-                copyBtn.classList.remove('bg-gray-200', 'text-deep-charcoal');
+                copyBtn.classList.remove('bg-soft-pink', 'text-deep-charcoal'); // Removed primary style
                 copyBtn.classList.add('bg-green-100', 'text-green-800');
                 
                 setTimeout(() => {
                     copyBtn.innerHTML = originalText;
-                    copyBtn.classList.add('bg-gray-200', 'text-deep-charcoal');
+                    copyBtn.classList.add('bg-soft-pink', 'text-deep-charcoal'); // Restored primary style
                     copyBtn.classList.remove('bg-green-100', 'text-green-800');
                 }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-                showToast('Failed to copy UPI ID');
-            });
+             }
+
+             function fallbackCopyTextToClipboard(text) {
+                 const textArea = document.createElement("textarea");
+                 textArea.value = text;
+                 textArea.style.position = "fixed";  // Avoid scrolling to bottom
+                 document.body.appendChild(textArea);
+                 textArea.focus();
+                 textArea.select();
+                 try {
+                     document.execCommand('copy');
+                     onCopySuccess();
+                 } catch (err) {
+                     console.error('Fallback verify failed', err);
+                     showToast('Prarthana UPI: ' + upiId);
+                 }
+                 document.body.removeChild(textArea);
+             }
         };
     }
 }
