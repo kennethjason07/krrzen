@@ -333,33 +333,34 @@ function displayCheckoutSummary() {
     
     // Setup UPI & QR Code
     const upiId = SUPABASE_CONFIG.upiId;
+    const payeeName = SUPABASE_CONFIG.payeeName || 'Make Payment';
     const amount = total.toFixed(2);
+    const txnRef = `ORD${Date.now()}`; // Unique transaction reference for the payment request
     
-    // Construct MINIMAL UPI link
-    // Removing 'pn' (Payee Name) allows the UPI app to verify the VPA itself
-    // Removing 'tn' (Note) avoids character encoding flags
-    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&am=${encodeURIComponent(amount)}&cu=INR`;
+    // Construct Enhanced UPI Link
+    // Adding 'tr' makes the transaction unique and traceable
+    // Adding 'pn' helps the app validate the payee (reduced risk triggers if name matches bank record)
+    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${encodeURIComponent(amount)}&cu=INR&tr=${txnRef}`;
     
     // Set QR Code
-    // Note: QR Server sometimes has issues with long URLs, but usually fine for standard UPI
     document.getElementById('payment-qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
     
     // Setup Mobile Button (Open UPI App)
     const mobileBtn = document.getElementById('open-upi-btn');
     if (mobileBtn) {
         // Use the "Cleanest Fix" method: create an anchor and click it
-        // This is treated as a user-initiated action rather than a script redirect
         mobileBtn.onclick = () => {
              const a = document.createElement('a');
              a.href = upiLink;
-             a.target = '_blank'; // Optional: try opening in new window/tab logic
+             a.target = '_blank';
              a.click();
         };
     }
-
-    // Setup Copy UPI ID Button
+    
+    // ... Copy Button Logic (unchanged) ...
     const copyBtn = document.getElementById('copy-upi-btn');
     if (copyBtn) {
+        // ... (keep existing copy logic) ...
         copyBtn.onclick = () => {
              // Fallback for mobile devices that might block clipboard API in some contexts
              // Try standard API first
@@ -412,10 +413,18 @@ async function handleCheckout(e) {
     const customerEmail = document.getElementById('customer-email').value;
     const customerPhone = document.getElementById('customer-phone').value;
     const customerAddress = document.getElementById('customer-address').value;
+    const upiRef = document.getElementById('upi-ref')?.value; // Get UPI Ref
+    
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalText = submitBtn.textContent;
     
     const totalAmount = getCartTotal();
+    
+    if (!upiRef) {
+        alert('Please enter the UPI Transaction ID / Reference No. to confirm payment.');
+        document.getElementById('upi-ref')?.focus();
+        return;
+    }
     
     try {
         submitBtn.disabled = true;
@@ -429,7 +438,8 @@ async function handleCheckout(e) {
             customer_address: customerAddress,
             total_amount: totalAmount,
             status: 'pending',
-            payment_status: 'user_confirmed'
+            payment_status: 'user_confirmed',
+            upi_transaction_id: upiRef // Store User provided Ref ID
         };
         
         const { data: order, error: orderError } = await db
