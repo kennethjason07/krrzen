@@ -344,10 +344,39 @@ function displayCheckoutSummary() {
     // Note: QR Server sometimes has issues with long URLs, but usually fine for standard UPI
     document.getElementById('payment-qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
     
-    // Setup Mobile Button
+    // Setup Mobile Button (Open UPI App)
     const mobileBtn = document.getElementById('open-upi-btn');
     if (mobileBtn) {
-        mobileBtn.onclick = () => window.location.href = upiLink;
+        // Use the "Cleanest Fix" method: create an anchor and click it
+        // This is treated as a user-initiated action rather than a script redirect
+        mobileBtn.onclick = () => {
+             const a = document.createElement('a');
+             a.href = upiLink;
+             a.target = '_blank'; // Optional: try opening in new window/tab logic
+             a.click();
+        };
+    }
+
+    // Setup Copy UPI ID Button
+    const copyBtn = document.getElementById('copy-upi-btn');
+    if (copyBtn) {
+        copyBtn.onclick = () => {
+            navigator.clipboard.writeText(upiId).then(() => {
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<span class="material-icons text-sm align-middle mr-2">check</span> Copied!';
+                copyBtn.classList.remove('bg-gray-200', 'text-deep-charcoal');
+                copyBtn.classList.add('bg-green-100', 'text-green-800');
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                    copyBtn.classList.add('bg-gray-200', 'text-deep-charcoal');
+                    copyBtn.classList.remove('bg-green-100', 'text-green-800');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                showToast('Failed to copy UPI ID');
+            });
+        };
     }
 }
 
