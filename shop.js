@@ -345,44 +345,34 @@ function displayCheckoutSummary() {
     // Set QR Code
     document.getElementById('payment-qr-code').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(upiLink)}`;
     
-    // Setup Mobile Button (Open UPI App)
-    const mobileBtn = document.getElementById('open-upi-btn');
-    if (mobileBtn) {
-        // Use the "Cleanest Fix" method: create an anchor and click it
-        mobileBtn.onclick = () => {
-             const a = document.createElement('a');
-             a.href = upiLink;
-             a.target = '_blank';
-             a.click();
-        };
-    }
-    
-    // ... Copy Button Logic (unchanged) ...
-    const copyBtn = document.getElementById('copy-upi-btn');
-    if (copyBtn) {
-        // ... (keep existing copy logic) ...
-        copyBtn.onclick = () => {
+    // Helper function for copy buttons
+    function setupCopy(btnId, stringToCopy, successHtml) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        
+        btn.onclick = () => {
              // Fallback for mobile devices that might block clipboard API in some contexts
              // Try standard API first
              if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(upiId).then(onCopySuccess).catch(err => {
+                navigator.clipboard.writeText(stringToCopy).then(onCopySuccess).catch(err => {
                     console.error('Clipboard API failed', err);
-                    fallbackCopyTextToClipboard(upiId);
+                    fallbackCopyTextToClipboard(stringToCopy);
                 });
              } else {
-                 fallbackCopyTextToClipboard(upiId);
+                 fallbackCopyTextToClipboard(stringToCopy);
              }
              
              function onCopySuccess() {
-                const originalText = copyBtn.innerHTML;
-                copyBtn.innerHTML = '<span class="material-icons text-sm align-middle mr-2">check</span> Copied!';
-                copyBtn.classList.remove('bg-soft-pink', 'text-deep-charcoal'); // Removed primary style
-                copyBtn.classList.add('bg-green-100', 'text-green-800');
+                const originalHtml = btn.innerHTML;
+                const originalClasses = btn.className;
+                
+                btn.innerHTML = successHtml;
+                btn.classList.remove('bg-gray-100', 'text-deep-charcoal', 'border-gray-300');
+                btn.classList.add('bg-green-100', 'text-green-800', 'border-green-300');
                 
                 setTimeout(() => {
-                    copyBtn.innerHTML = originalText;
-                    copyBtn.classList.add('bg-soft-pink', 'text-deep-charcoal'); // Restored primary style
-                    copyBtn.classList.remove('bg-green-100', 'text-green-800');
+                    btn.innerHTML = originalHtml;
+                    btn.className = originalClasses;
                 }, 2000);
              }
 
@@ -398,12 +388,16 @@ function displayCheckoutSummary() {
                      onCopySuccess();
                  } catch (err) {
                      console.error('Fallback verify failed', err);
-                     showToast('Prarthana UPI: ' + upiId);
+                     showToast('Prarthana UPI: ' + upiId); 
                  }
                  document.body.removeChild(textArea);
              }
         };
     }
+
+    // Setup Copy Buttons
+    setupCopy('copy-upi-btn', upiId, '<span class="material-icons text-sm align-middle mr-1">check</span> Copied!');
+    setupCopy('copy-link-btn', upiLink, '<span class="material-icons text-sm align-middle mr-1">check</span> Link Copied!');
 }
 
 async function handleCheckout(e) {
